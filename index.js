@@ -224,6 +224,9 @@ function getPdf417Parsed(data, separator) {
     for (var i = 0; i < fields.length - 1; i++) {
         var regex = new RegExp(fields[i] + '[^' + separator + ']+' + separator);
         var match = regex.exec(data);
+        
+        //Default string to prevent errors i.e. Minnesota lacks DAK
+        parsedData[fields[i]] = "";
         if(match){
             if(match[0].slice(3, match[0].length)) {
                 parsedData[fields[i]] = match[0].slice(3, match[0].length - 1).trim();
