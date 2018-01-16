@@ -44,23 +44,13 @@ var stripe = function(data) {
         "iso_iin": res2[2],
         "dl": res2[3],
         "expiration_date": function() {
-            var exp = res2[5].match(/(\d{4})(\d{2})(\d{2})/);
-            if(exp[1].startsWith('20')){
-                //Year is first
-                exp[1] = parseInt(exp[1]);
-                exp[2] = parseInt(exp[2]);
-                exp[3] = parseInt(exp[3]);
-            }else{
-                exp = res2[5].match(/(\d{2})(\d{2})(\d{4})/);
-                exp[1] = parseInt(exp[1]);
-                exp[2] = parseInt(exp[2]);
-                exp[3] = parseInt(exp[3]);
-            }
-            return (
-                new Date(
-                    Date.UTC(exp[3], exp[1], exp[2])
-                )
-            );
+          var expString   = res2[5];
+          var birthString = res2[6];
+          var year        = expString.substring(0,2);
+          var month       = expString.substring(2,4) - 1;
+          var day         = birthString.substring(6,8);
+
+          return new Date('20' + year, month, day);
         },
         "birthday": function() {
             var dob = res2[6].match(/(\d{4})(\d{2})(\d{2})/);
@@ -232,7 +222,7 @@ function getPdf417Parsed(data, separator) {
     for (var i = 0; i < fields.length - 1; i++) {
         var regex = new RegExp(fields[i] + '[^' + separator + ']+' + separator);
         var match = regex.exec(data);
-        
+
         //Default string to prevent errors i.e. Minnesota lacks DAK
         parsedData[fields[i]] = "";
         if(match){
