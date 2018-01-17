@@ -100,6 +100,9 @@ var stripe = function(data) {
         "id": function(){
             var id;
             switch(this.state) {
+                case "CA":
+                    var res = res2[3].match(/(\d{2})(.*)/);
+                    id = (String.fromCharCode(Number(res[1]) + 64)  + res[2]);
                 case "FL":
                     var res = res2[3].match(/(\d{2})(.*)/);
                     id = (String.fromCharCode(Number(res[1]) + 64)  + res[2] + res2[7]);
