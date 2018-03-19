@@ -25,9 +25,9 @@ var stripe = function(data) {
 
     var res1 = track[1].match(/(\%)([A-Z]{2})([^\^]{0,13})\^?([^\^]{0,35})\^?([^\^]{0,29})\^?\s*?\?/);
     var res2 = track[2].match(/(;)(\d{6})(\d{0,13})(\=)(\d{4})(\d{8})(\d{0,5})\=?\?/);
-    var res3 = track[3].match(/(\#|\%|\+)(\d|\!|\")(\d|\s)([0-9A-Z ]{11})([0-9A-Z ]{2})([0-9A-Z ]{10})([0-9A-Z ]{4})([12 ]{1})([0-9A-Z ]{3})([0-9A-Z ]{3})([0-9A-Z ]{3})([0-9A-Z ]{3})(.*?)\?/);
+    var res3 = track[3].match(/(\#|\%|\+)(\d|\!|\")(\d|\!|\s)([0-9A-Z ]{11})([0-9A-Z ]{2})([0-9A-Z ]{10})([0-9A-Z ]{4})([\d\w ]{1})([0-9A-Z ]{3})([0-9A-Z ]{3})([0-9A-Z ]{3})([0-9A-Z ]{3})(.*?)\?/);
 
-    res3 = res3 === null ? {} : res3;//prevents read failers of accessing properties on null object
+    res3 = res3 === null ? {} : res3; //prevents read failers of accessing properties on null object
 
     return {
         "state": res1[2],
@@ -38,7 +38,7 @@ var stripe = function(data) {
                 last: res[1],
                 first: res[2],
                 middle: res[3]
-            }
+            };
         },
         "address": res1[5],
         "iso_iin": res2[2],
@@ -78,18 +78,15 @@ var stripe = function(data) {
         "restrictions": res3[6],
         "endorsments": res3[7],
         "sex": function() {
-            switch(parsedData.DBC) {
+            switch(res3[8]) {
                 case "1":
                 case 'M':
                     return "MALE";
-                    break;
                 case "2":
                 case 'F':
                     return "FEMALE";
-                    break;
                 default:
                     return "UKNOWN";
-                    break;
             }
         },
         "height": res3[9],
@@ -98,13 +95,14 @@ var stripe = function(data) {
         "eye_color": res3[12],
         "misc": res3[13],
         "id": function(){
-            var id;
+            var id, res;
             switch(this.state) {
                 case "CA":
-                    var res = res2[3].match(/(\d{2})(.*)/);
+                    res = res2[3].match(/(\d{2})(.*)/);
                     id = (String.fromCharCode(Number(res[1]) + 64)  + res[2]);
+                    break;
                 case "FL":
-                    var res = res2[3].match(/(\d{2})(.*)/);
+                    res = res2[3].match(/(\d{2})(.*)/);
                     id = (String.fromCharCode(Number(res[1]) + 64)  + res[2] + res2[7]);
                     break;
                 default:
@@ -117,6 +115,7 @@ var stripe = function(data) {
 };
 
 function getPdf417Parsed(data, separator) {
+    var name;
 
     if(!separator) {
         separator = '\n';
@@ -237,25 +236,26 @@ function getPdf417Parsed(data, separator) {
 
     // version 3 putting middle and first names in the same field
     if(parsedData.hasOwnProperty('DCT')) {
-        var name = parsedData.DCT.split(',');
+        name = parsedData.DCT.split(',');
         parsedData.DAC = name[0]; // first name
         parsedData.DAD = name[1] ? name[1] : '' ; // middle name
     }
+
     if(parsedData.hasOwnProperty('DAQ')) {
         parsedData.DAQ = parsedData.DAQ.replace(/ /g, '');
         parsedData.DAQ = parsedData.DAQ.replace(/-/g, '');
     }
 
     if(parsedData.hasOwnProperty('DAA')) {
-        var name = parsedData.DAA.split(',');
+        name = parsedData.DAA.split(',');
 
         // PA License seperated by space
-        if (name.length <= 1){
+        if (name.length <= 1) {
             name = parsedData.DAA.split(' ');
             parsedData.DCS = name[2];
             parsedData.DAC = name[0];
             parsedData.DAD = name[1];
-        }else{
+        } else {
             parsedData.DCS = name[0];
             parsedData.DAC = name[1];
             parsedData.DAD = name[2];
@@ -273,13 +273,15 @@ function getPdf417Parsed(data, separator) {
                 parsedData.DBB.substring(6,8) +  // day
                 parsedData.DBB.substring(0,4)    // year
         );
-    };
+    }
+
     if(Number(version) === 1 && parsedData.hasOwnProperty('DAL')) {
         // Because fuck oregon.
         parsedData.DAG = parsedData.DAG || parsedData.DAL;
     }
+
     return parsedData;
-};
+}
 
 var pdf417 = function(data, separator) {
     var parsedData = getPdf417Parsed(data, separator);
@@ -291,7 +293,7 @@ var pdf417 = function(data, separator) {
                 last: parsedData.DCS,
                 first: parsedData.DAC,
                 middle: parsedData.DAD
-            }
+            };
         },
         "address": parsedData.DAG,
         "iso_iin": undefined,
@@ -339,14 +341,11 @@ var pdf417 = function(data, separator) {
                 case "1":
                 case 'M':
                     return "MALE";
-                    break;
                 case "2":
                 case 'F':
                     return "FEMALE";
-                    break;
                 default:
                     return "UKNOWN";
-                    break;
             }
         },
         "height": undefined,
